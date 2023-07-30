@@ -45,8 +45,8 @@ grid_step = 1/3600
 
 # Filename as command line argument systax check
 if len(sys.argv[1]) == 11:
-	if sys.argv[1][0] == 'N' or sys.argv[1][0] == 'S':
-		if  sys.argv[1][3] == 'E' or sys.argv[1][3] == 'W':
+	if sys.argv[1][0] in ['N', 'S']:
+		if sys.argv[1][3] in ['E', 'W']:
 			input_filename = sys.argv[1]
 		else:
 			print('Filename failed syntax check')
@@ -74,8 +74,8 @@ if input_filename[3] == 'W':
     lon0 = -abs(lon0)
 
 # Auto names output files if auto_name is True
-image_filename = '%s.png' % (input_filename[0:7])
-kml_filename = '%s.kml' % (input_filename[0:7])
+image_filename = f'{input_filename[:7]}.png'
+kml_filename = f'{input_filename[:7]}.kml'
 
 # add 1 to lat0 due to hgt file origin being bottom left vs top right.
 lat0_flipped = lat0 + 1
@@ -105,34 +105,34 @@ plt.axis('off')
 plt.savefig(image_filename, bbox_inches='tight', pad_inches=0, dpi=300)
 plt.close()
 
-print('Terrain map saved as %s' % (image_filename))
+print(f'Terrain map saved as {image_filename}')
 
-print('KML saved as %s' % (kml_filename))
+print(f'KML saved as {kml_filename}')
 
 # Generate the KML file
 ground = kml.newgroundoverlay(name='Elevation Data')
 ground.icon.href = image_filename
 ground.gxlatlonquad.coords = [(lon0, lat0), (lon0 + 1, lat0), (lon0 + 1, lat0 + 1), (lon0, lat0 + 1)]
 
-if print_list == True:
+if print_list:
 	print('Lat, Lon, Elevation (m)')
-	if freedom_units == True:
+	if freedom_units:
 		print('Lat, Lon, Elevation (Ft)')
 
 # Loop over indices and print corresponding elevation values
 for index in max_indices:
 	row, col = index
 	elevation = elevations[row, col]
-	if freedom_units == True:
+	if freedom_units:
 		elevation = elevation * 3.28
 	lat = lat0_flipped - row * grid_step
 	lon = lon0 + col * grid_step
 	### Uncomment the next line for a verbose output
-	if print_list == True:
+	if print_list:
 		print('%1.4f, %1.4f, %d' % (lat, lon, elevation))
-	if freedom_units == False:
-		kml.newpoint(name=f'%dm' % (elevation), coords=[(lon, lat, elevation)])
-	if freedom_units == True:
-		kml.newpoint(name=f'%dft' % (elevation), coords=[(lon, lat, elevation)])
+	if not freedom_units:
+		kml.newpoint(name='%dm' % elevation, coords=[(lon, lat, elevation)])
+	else:
+		kml.newpoint(name='%dft' % elevation, coords=[(lon, lat, elevation)])
 
 kml.save(kml_filename)
